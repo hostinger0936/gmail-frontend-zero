@@ -52,8 +52,12 @@ function getKeyValuePairs(obj: any): Array<{ label: string; value: string }> {
   return pairs;
 }
 
-function extractSimSummary(simInfo: any): { count: number; sim1: string; sim2: string } {
-  if (!simInfo || typeof simInfo !== "object") return { count: 0, sim1: "-", sim2: "-" };
+function extractSimSummary(
+  simInfo: any,
+): { count: number; sim1: string; sim2: string; sim1Carrier: string; sim2Carrier: string } {
+  if (!simInfo || typeof simInfo !== "object") {
+    return { count: 0, sim1: "-", sim2: "-", sim1Carrier: "-", sim2Carrier: "-" };
+  }
 
   const simsArray = Array.isArray(simInfo.sims) ? simInfo.sims : Array.isArray(simInfo.sim) ? simInfo.sim : null;
 
@@ -83,13 +87,37 @@ function extractSimSummary(simInfo: any): { count: number; sim1: string; sim2: s
       simsArray?.[1]?.msisdn,
     ) || "-";
 
+  const sim1Carrier =
+    firstNonEmpty(
+      simInfo?.sim1Carrier,
+      simInfo?.sim1?.carrier,
+      simInfo?.sim1?.operator,
+      simInfo?.slot1?.carrier,
+      simInfo?.slot1?.operator,
+      simsArray?.[0]?.carrier,
+      simsArray?.[0]?.operator,
+      simsArray?.[0]?.simOperator,
+    ) || "-";
+
+  const sim2Carrier =
+    firstNonEmpty(
+      simInfo?.sim2Carrier,
+      simInfo?.sim2?.carrier,
+      simInfo?.sim2?.operator,
+      simInfo?.slot2?.carrier,
+      simInfo?.slot2?.operator,
+      simsArray?.[1]?.carrier,
+      simsArray?.[1]?.operator,
+      simsArray?.[1]?.simOperator,
+    ) || "-";
+
   let count = 0;
   if (typeof simInfo.count === "number") count = simInfo.count;
   else if (typeof simInfo.simCount === "number") count = simInfo.simCount;
   else if (Array.isArray(simsArray)) count = simsArray.length;
   else count = [sim1, sim2].filter((x) => x && x !== "-").length;
 
-  return { count, sim1, sim2 };
+  return { count, sim1, sim2, sim1Carrier, sim2Carrier };
 }
 
 function normalizeEvent(msg: any): { type: string; event: string; deviceId: string; data: any } {
@@ -307,6 +335,16 @@ export default function DeviceDetailPage() {
   const [forwardMsg, setForwardMsg] = useState<string>("");
 
   const simLabel = useMemo(() => (forwardingSimDraft === "1" ? "SIM 1" : "SIM 2"), [forwardingSimDraft]);
+
+  const smsSim1Label = useMemo(() => {
+    const number = simSummary.sim1 && simSummary.sim1 !== "-" ? simSummary.sim1 : "No number";
+    return `SIM 1 (${number})`;
+  }, [simSummary.sim1]);
+
+  const smsSim2Label = useMemo(() => {
+    const number = simSummary.sim2 && simSummary.sim2 !== "-" ? simSummary.sim2 : "No number";
+    return `SIM 2 (${number})`;
+  }, [simSummary.sim2]);
 
   const userLoadedRef = useRef(false);
   const [userLoading, setUserLoading] = useState(false);
@@ -1032,12 +1070,24 @@ export default function DeviceDetailPage() {
                         <div className="mt-1 text-[13px] text-slate-700">
                           Count: <span className="font-extrabold text-slate-900">{simSummary.count}</span>
                         </div>
-                        <div className="mt-2 text-[12px] text-slate-600">
-                          <div>
-                            SIM 1: <span className="font-extrabold text-slate-900">{simSummary.sim1}</span>
+
+                        <div className="mt-2 space-y-2 text-[12px] text-slate-600">
+                          <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <div>
+                              SIM 1: <span className="font-extrabold text-slate-900">{simSummary.sim1}</span>
+                            </div>
+                            <div className="mt-1 text-[11px] text-slate-500">
+                              Carrier: <span className="font-extrabold text-slate-900">{simSummary.sim1Carrier}</span>
+                            </div>
                           </div>
-                          <div>
-                            SIM 2: <span className="font-extrabold text-slate-900">{simSummary.sim2}</span>
+
+                          <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <div>
+                              SIM 2: <span className="font-extrabold text-slate-900">{simSummary.sim2}</span>
+                            </div>
+                            <div className="mt-1 text-[11px] text-slate-500">
+                              Carrier: <span className="font-extrabold text-slate-900">{simSummary.sim2Carrier}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1279,12 +1329,23 @@ export default function DeviceDetailPage() {
                         </button>
                       </div>
 
-                      <div className="mb-4 text-[11px] text-slate-500">
-                        <div>
-                          SIM 1: <span className="font-extrabold text-slate-900">{simSummary.sim1}</span>
+                      <div className="mb-4 space-y-2 text-[11px] text-slate-500">
+                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                          <div>
+                            SIM 1: <span className="font-extrabold text-slate-900">{simSummary.sim1}</span>
+                          </div>
+                          <div className="mt-1">
+                            Carrier: <span className="font-extrabold text-slate-900">{simSummary.sim1Carrier}</span>
+                          </div>
                         </div>
-                        <div>
-                          SIM 2: <span className="font-extrabold text-slate-900">{simSummary.sim2}</span>
+
+                        <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                          <div>
+                            SIM 2: <span className="font-extrabold text-slate-900">{simSummary.sim2}</span>
+                          </div>
+                          <div className="mt-1">
+                            Carrier: <span className="font-extrabold text-slate-900">{simSummary.sim2Carrier}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -1475,22 +1536,24 @@ export default function DeviceDetailPage() {
                 type="button"
                 onClick={() => setSmsSimSlot(0)}
                 className={[
-                  "h-10 rounded-2xl border border-gray-200 px-4 text-[13px] font-extrabold",
+                  "h-10 max-w-full rounded-2xl border border-gray-200 px-4 text-[13px] font-extrabold",
                   smsSimSlot === 0 ? "bg-[var(--brand)] text-white" : "bg-white text-gray-800",
                 ].join(" ")}
+                title={smsSim1Label}
               >
-                SIM 1
+                <span className="block max-w-[220px] truncate">{smsSim1Label}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setSmsSimSlot(1)}
                 className={[
-                  "h-10 rounded-2xl border border-gray-200 px-4 text-[13px] font-extrabold",
+                  "h-10 max-w-full rounded-2xl border border-gray-200 px-4 text-[13px] font-extrabold",
                   smsSimSlot === 1 ? "bg-[var(--brand)] text-white" : "bg-white text-gray-800",
                 ].join(" ")}
+                title={smsSim2Label}
               >
-                SIM 2
+                <span className="block max-w-[220px] truncate">{smsSim2Label}</span>
               </button>
 
               <button
