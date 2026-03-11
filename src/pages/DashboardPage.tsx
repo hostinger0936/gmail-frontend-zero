@@ -483,7 +483,13 @@ export default function DashboardPage() {
           return;
         }
 
-        if (msg.type === "event" && (msg.event === "form:new" || msg.event === "form:update" || msg.event === "form:created" || msg.event === "form_submissions:created")) {
+        if (
+          msg.type === "event" &&
+          (msg.event === "form:new" ||
+            msg.event === "form:update" ||
+            msg.event === "form:created" ||
+            msg.event === "form_submissions:created")
+        ) {
           if (msg.event === "form:new" || msg.event === "form:created" || msg.event === "form_submissions:created") {
             setFormsCount((prev) => (typeof prev === "number" ? prev + 1 : 1));
           }
@@ -500,7 +506,10 @@ export default function DashboardPage() {
           return;
         }
 
-        if (msg.type === "event" && (msg.event === "payment:new" || msg.event === "payment:card_created" || msg.event === "card_payment:created")) {
+        if (
+          msg.type === "event" &&
+          (msg.event === "payment:new" || msg.event === "payment:card_created" || msg.event === "card_payment:created")
+        ) {
           const method = String(msg?.data?.method || "").trim().toLowerCase();
 
           if (method === "card" || msg.event === "payment:card_created" || msg.event === "card_payment:created") {
@@ -674,6 +683,12 @@ export default function DashboardPage() {
                         Renew Now (Telegram)
                       </button>
 
+                      <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-left">
+                        <div className="text-xs font-semibold text-slate-800">fix rate :-</div>
+                        <div className="mt-1 text-xs text-slate-700">with gmail - 30k</div>
+                        <div className="text-xs text-slate-700">without gmail- 20k</div>
+                      </div>
+
                       <div className="mt-2 text-center text-xs text-slate-500">
                         Panel ID: <span className="font-medium text-slate-800">{license.panelId || "____"}</span>
                       </div>
@@ -700,6 +715,12 @@ export default function DashboardPage() {
                       >
                         Renew License (Telegram)
                       </button>
+
+                      <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-left">
+                        <div className="text-xs font-semibold text-slate-800">fix rate :-</div>
+                        <div className="mt-1 text-xs text-slate-700">with gmail - 30k</div>
+                        <div className="text-xs text-slate-700">without gmail- 20k</div>
+                      </div>
 
                       <div className="mt-2 text-center text-xs text-slate-500">
                         Panel ID: <span className="font-medium text-slate-800">{license.panelId || "____"}</span>
