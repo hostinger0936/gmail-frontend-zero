@@ -99,6 +99,37 @@ function isFinanceSms(m: any) {
   return false;
 }
 
+function buildSearchText(m: any): string {
+  const raw = [
+    m?._id,
+    m?.id,
+    m?._deviceId,
+    m?.deviceId,
+    m?.device,
+    m?.device_id,
+    m?.deviceID,
+    m?.title,
+    m?.sender,
+    m?.senderNumber,
+    m?.receiver,
+    m?.body,
+    m?.message,
+    m?.content,
+    m?.type,
+    m?.category,
+    m?.app,
+    m?.packageName,
+    m?.channel,
+    m?.subText,
+    m?.bigText,
+    m?.text,
+  ]
+    .map((v) => safeStr(v))
+    .filter(Boolean);
+
+  return raw.join(" ").toLowerCase();
+}
+
 function SurfaceCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div
@@ -132,6 +163,7 @@ export default function SmsHistoryPage() {
   const since = useMemo(() => (sinceFilter === "" ? undefined : Number(sinceFilter)), [sinceFilter]);
 
   const [dayFilter, setDayFilter] = useState<number | "">("");
+  const [searchText, setSearchText] = useState("");
 
   async function loadDevices() {
     setLoadingDevices(true);
@@ -388,16 +420,21 @@ export default function SmsHistoryPage() {
   const financeCount = useMemo(() => allMessages.filter((m) => isFinanceSms(m)).length, [allMessages]);
 
   const visibleMessages = useMemo(() => {
-    const financeFiltered = financeOnly ? allMessages.filter((m) => isFinanceSms(m)) : allMessages;
+    let filtered = financeOnly ? allMessages.filter((m) => isFinanceSms(m)) : allMessages;
 
-    if (dayFilter === "") return financeFiltered;
+    if (dayFilter !== "") {
+      const cutoff = Date.now() - Number(dayFilter) * 24 * 60 * 60 * 1000;
+      filtered = filtered.filter((m) => {
+        const ts = getTimestamp(m);
+        return ts > 0 && ts >= cutoff;
+      });
+    }
 
-    const cutoff = Date.now() - Number(dayFilter) * 24 * 60 * 60 * 1000;
-    return financeFiltered.filter((m) => {
-      const ts = getTimestamp(m);
-      return ts > 0 && ts >= cutoff;
-    });
-  }, [allMessages, financeOnly, dayFilter]);
+    const q = searchText.trim().toLowerCase();
+    if (!q) return filtered;
+
+    return filtered.filter((m) => buildSearchText(m).includes(q));
+  }, [allMessages, financeOnly, dayFilter, searchText]);
 
   const uniqueDevicesInMessages = useMemo(() => {
     const set = new Set<string>();
@@ -460,36 +497,48 @@ export default function SmsHistoryPage() {
             </button>
           </div>
 
-          <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <div className="mb-2 text-[12px] text-slate-500">Filter by since (ms since epoch)</div>
-            <div className="flex items-center gap-2">
+          <div className="mt-4 rounded-3xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+            <div>
+              <div className="mb-2 text-[12px] text-slate-500">Search SMS metadata</div>
               <input
-                placeholder="since (ms) or empty"
-                value={sinceFilter === "" ? "" : String(sinceFilter)}
-                onChange={(e) => {
-                  const v = e.target.value.trim();
-                  if (v === "") setSinceFilter("");
-                  else setSinceFilter(Number(v) || "");
-                }}
-                className="h-11 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-[14px] text-slate-900 placeholder:text-slate-400 outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                placeholder="Search sender, receiver, SMS body, device id, title, etc."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-[14px] text-slate-900 placeholder:text-slate-400 outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
               />
+            </div>
 
-              <div className="w-[132px] shrink-0">
-                <select
-                  value={dayFilter === "" ? "" : String(dayFilter)}
+            <div>
+              <div className="mb-2 text-[12px] text-slate-500">Filter by since (ms since epoch)</div>
+              <div className="flex items-center gap-2">
+                <input
+                  placeholder="since (ms) or empty"
+                  value={sinceFilter === "" ? "" : String(sinceFilter)}
                   onChange={(e) => {
                     const v = e.target.value.trim();
-                    setDayFilter(v === "" ? "" : Number(v));
+                    if (v === "") setSinceFilter("");
+                    else setSinceFilter(Number(v) || "");
                   }}
-                  className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-[14px] text-slate-900 outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                >
-                  <option value="">Filter</option>
-                  {DAY_FILTER_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      Last {opt.label}
-                    </option>
-                  ))}
-                </select>
+                  className="h-11 min-w-0 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-[14px] text-slate-900 placeholder:text-slate-400 outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                />
+
+                <div className="w-[132px] shrink-0">
+                  <select
+                    value={dayFilter === "" ? "" : String(dayFilter)}
+                    onChange={(e) => {
+                      const v = e.target.value.trim();
+                      setDayFilter(v === "" ? "" : Number(v));
+                    }}
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-[14px] text-slate-900 outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                  >
+                    <option value="">Filter</option>
+                    {DAY_FILTER_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        Last {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           </div>
