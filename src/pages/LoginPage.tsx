@@ -52,6 +52,17 @@ function IconChannel(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function IconSpark(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M12 3.5l1.8 4.7 4.7 1.8-4.7 1.8L12 16.5l-1.8-4.7-4.7-1.8 4.7-1.8L12 3.5Zm6 10 1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5ZM6 14l1.1 2.9L10 18l-2.9 1.1L6 22l-1.1-2.9L2 18l2.9-1.1L6 14Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 function SurfaceCard({
   children,
   className = "",
@@ -363,6 +374,31 @@ export default function LoginPage() {
               <div className="py-10 text-center text-slate-500">Loading…</div>
             ) : (
               <form onSubmit={handleSaveAndLogin} className="space-y-4">
+                <div className="rounded-[24px] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 shadow-[0_8px_22px_rgba(245,158,11,0.10)]">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-amber-200 bg-white text-amber-600">
+                      <IconSpark className="h-5 w-5" />
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-bold uppercase tracking-[0.18em] text-amber-700">Fix Rate</div>
+                      <div className="mt-2 grid grid-cols-1 gap-2">
+                        <div className="flex items-center justify-between rounded-2xl border border-amber-100 bg-white/90 px-3 py-2">
+                          <span className="text-[13px] font-medium text-slate-700">With Gmail</span>
+                          <span className="text-[15px] font-extrabold text-slate-900">30k</span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-2xl border border-amber-100 bg-white/90 px-3 py-2">
+                          <span className="text-[13px] font-medium text-slate-700">Without Gmail</span>
+                          <span className="text-[15px] font-extrabold text-slate-900">20k</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-[11px] leading-relaxed text-amber-700/90">
+                        Important pricing info before login.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <Field
                   label="Username"
                   value={username}
